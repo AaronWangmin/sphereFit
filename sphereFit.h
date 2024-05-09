@@ -22,9 +22,7 @@ public:
     
 private:
     // 4 *1 vector: the coord of center of sphere, and radius
-    vector<double> sphereParam;
-    
-//     void ceresInitial();
+    vector<double> sphereParam;  
     
 };
 

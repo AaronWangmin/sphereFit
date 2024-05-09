@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-set( CMAKE_CXX_FLAGS "-std=c++17 -O3" )
+set( CMAKE_CXX_FLAGS "-std=c++17 " )
 
 set( CMAKE_BUILD_TYPE "Debug")
 
@@ -51,3 +51,9 @@ find_package(Ceres REQUIRED)
 
 add_executable(sphereFit sphereFit.cpp)
 target_link_libraries(sphereFit Ceres::ceres)
+
+add_executable(dataPrepare dataPrepare.cpp circleFit.cpp)
+target_link_libraries(dataPrepare Ceres::ceres)
+
+add_executable(circleFit circleFit.cpp dataPrepare.cpp)
+target_link_libraries(circleFit Ceres::ceres)

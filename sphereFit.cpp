@@ -14,11 +14,6 @@ using namespace std;
 
 // h = (x - a)^2 + (y - b)^2 + (z - c)^2 - r^2
 
-// linear at a0,b0,c0,r0
-
-// h = -2(x-a0) * delta_a - -2(y-b0) * delta_b -2(z-c0) * delta_c - 2r0 * delta_r +
-//     (x-a0)^2 + (y-b0)^2 + (z-c0)^2 - r0^2
-
 void SphereFit::getObsCoords(vector<double>& x_data, vector<double>& y_data, vector<double>& z_data)
 {
     // the earth truth: use for simulate the sphere data
@@ -60,6 +55,10 @@ void SphereFit::fitCompute()
 {
     ceres::Problem problem;
     
+//     std::vector<double*>  parameterBlock= this->sphereParam; 
+//     int sizeOfParameterBlock = sizeof(parameterBlock) / sizeof(parameterBlock[0]);
+//     problem.AddParameterBlock(parameterBlock&,sizeOfParameterBlock,nullptr);
+    
     vector<double> x_data, y_data,z_data;
     this->getObsCoords(x_data, y_data,z_data);
     
@@ -68,7 +67,8 @@ void SphereFit::fitCompute()
         ceres::CostFunction* costFunction = new ceres::AutoDiffCostFunction<SphereFittingCost,1,4> (
             new SphereFittingCost ( x_data[i],y_data[i],z_data[i] ) );
         
-        problem.AddResidualBlock (costFunction,new ceres::CauchyLoss ( 0.5 ),this->getSpherePara().data());
+        problem.AddResidualBlock (costFunction,new ceres::CauchyLoss ( 0.5 ),
+                                  this->sphereParam.data());
 
     }
     
@@ -88,7 +88,8 @@ void SphereFit::fitCompute()
     ceres::Covariance covariance ( covarianceOptions );
 
     std::vector<std::pair<const double*, const double*> > covariance_blocks;
-    covariance_blocks.push_back ( make_pair (this->getSpherePara().data(), this->getSpherePara().data() ) );
+    covariance_blocks.push_back ( make_pair (this->getSpherePara().data(), 
+                                             this->getSpherePara().data() ) );
 
     CHECK ( covariance.Compute(covariance_blocks, &problem ) );
 
@@ -99,7 +100,14 @@ void SphereFit::fitCompute()
                                   covariance_abcr.data() );
 
     std::cout << endl << "covariance of abcr: " << endl;
-    std::cout << covariance_abcr << endl;     
+    std::cout << covariance_abcr << endl;    
+    
+    std::vector<ceres::ResidualBlockId>* residual_blocks;
+    problem.GetResidualBlocks(residual_blocks);
+//     const double* values;
+//     std::vector<ceres::ResidualBlockId>* residual_blocks;
+//     problem.GetResidualBlocksForParameterBlock(values,residual_blocks);
+//     cout << "test..." << endl;
 
 }
 
