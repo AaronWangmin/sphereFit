@@ -36,21 +36,33 @@ public:
 
 void readObsFile(const string dataFileDir);
     
-void selectObsCoords(vector<Point>& selectedObsVec ,Point& circleCenter, 
+void selectPointsByPrismAndAngle(vector<Point>& selectedObsVec ,Point& circleCenter, 
                     const string prismName,const double angle,const string fixTag);
 
-void calculateCircleInitialParam(Point& circleCenterInitail,double& radumInitial,
+// void selectPointsByPrismAndPitch(vector<Point>& selectedObsVec ,Point& circleCenter, 
+//                     const string prismName,const double angle,const string fixTag);
+
+void selectPointsByPrims();
+
+void calculateMeanCenterAndRadium(Point& circleCenterInitail,double& radumInitial,
                                  const vector<Point>& pointsVec);
 
 void prepareAllData();
 
+vector<Point>& getAllObsVector();
 vector<tuple<vector<Point>,Point, double>>& getHorienCircleDataVector();
+vector<tuple<vector<Point>,Point, double>>& getVerticalCircleDataVector();
+
+vector< tuple<string,vector<Point>>>& getSphereDataByPrims();
 
 private:
     vector<Point> obsVector;
     vector<tuple<vector<Point>,Point, double>> horienCircleDataVector;
     vector<tuple<vector<Point>,Point, double>> verticalCircleDataVector;
     
+    vector< tuple<string,vector<Point>>> spherePointsVector;
+    
+public:    
     vector<string> prismVector = {"A1","B1","C1","D1","A2","B2","C2","D2"};
     vector<double> yawVector = {0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255,270,285,300,315,330,345};
     vector<double> pitchVector = {5,15,25,35,45,55,65,75,85};    

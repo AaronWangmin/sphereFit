@@ -41,13 +41,11 @@ void DataPrepare::readObsFile(const string dataFileDir)
         if(infoList[0] != "")
         {  
             yaw = stod(infoList[0]); 
-//             yawVector.push_back(yaw);
         }
         
         if(infoList[1] != "")
         {
-           pitch = stod(infoList[1]); 
-//            pitchVector.push_back(pitch);
+           pitch = stod(infoList[1]);
         }
         
         Point point(pointName,prismName,N,E,H,yaw,pitch);
@@ -55,15 +53,16 @@ void DataPrepare::readObsFile(const string dataFileDir)
         
     }
     
+    file.close();
+    
     cout << " count of obsPoints: " << obsVector.size() << endl; 
     
 }
 
-void DataPrepare::selectObsCoords(vector<Point>& selectedObsVec ,Point& circleCenter,
+void DataPrepare::selectPointsByPrismAndAngle(vector<Point>& selectedObsVec ,Point& circleCenter,
                              const string prismName,const double angle,const string fixTag)
 {
-    //     pitch is constant    
-    
+    //     pitch is constant 
     if(fixTag == "V")
     {
         for(const auto&  point : obsVector)
@@ -75,24 +74,16 @@ void DataPrepare::selectObsCoords(vector<Point>& selectedObsVec ,Point& circleCe
             }
         }
 
-        if(selectedObsVec.size() > 3)
+        if(selectedObsVec.size() > 6)
         {
             Point circleCenterInitail;
             double radiumInitial;
-            calculateCircleInitialParam(circleCenterInitail,radiumInitial,selectedObsVec);
+            calculateMeanCenterAndRadium(circleCenterInitail,radiumInitial,selectedObsVec);
             
             tuple<vector<Point>,Point, double> horienCircleData(
                 selectedObsVec, circleCenterInitail,radiumInitial);
             
-            horienCircleDataVector.push_back(horienCircleData);   
-            
-//             cout << prismName << " pitch: " << angle << 
-//                 " count of points: " << selectedObsVec.size() <<
-//                 " circleCenterInitail x: "<<  circleCenterInitail.x << " , "  <<
-//                                      "y: " << circleCenterInitail.y  << " , " << 
-//                                      "z: " << circleCenterInitail.z  << " , " <<
-//                " radiumInitail : " << radiumInitial << endl;
-            
+            horienCircleDataVector.push_back(horienCircleData); 
         } 
     }
     
@@ -106,11 +97,11 @@ void DataPrepare::selectObsCoords(vector<Point>& selectedObsVec ,Point& circleCe
             }
         }
  
-        if(selectedObsVec.size() > 3)
+        if(selectedObsVec.size() > 6)
             {
                 Point circleCenterInitail;
                 double radiumInitial;
-                calculateCircleInitialParam(circleCenterInitail,radiumInitial,selectedObsVec);
+                calculateMeanCenterAndRadium(circleCenterInitail,radiumInitial,selectedObsVec);
                 
                 tuple<vector<Point>,Point, double> verticalCircleData(
                     selectedObsVec, circleCenterInitail,radiumInitial);
@@ -128,7 +119,25 @@ void DataPrepare::selectObsCoords(vector<Point>& selectedObsVec ,Point& circleCe
     
 }
 
-void DataPrepare::calculateCircleInitialParam(Point& circleCenterInitail,double& radumInitial,
+void DataPrepare::selectPointsByPrims()
+{
+    for(string prism : this->prismVector)
+    {
+        vector<Point> pointVector;
+        for(Point p : this->obsVector)
+        {
+            if(p.prismName == prism)
+            {
+                pointVector.push_back(p);
+            }
+        } 
+        
+        tuple< string, vector<Point>> pointVectorByPrism(prism,pointVector);
+        this->spherePointsVector.push_back(pointVectorByPrism);
+    }
+}
+
+void DataPrepare::calculateMeanCenterAndRadium(Point& circleCenterInitail,double& radumInitial,
                                               const vector<Point>& pointsVec)
 {
     int count = pointsVec.size();
@@ -170,7 +179,7 @@ void DataPrepare::prepareAllData()
         
         for(const auto& pitch : pitchVector)
         {
-            selectObsCoords(selectedObsVec,circleCenter,prism,pitch,"V"); 
+            selectPointsByPrismAndAngle(selectedObsVec,circleCenter,prism,pitch,"V"); 
             selectedObsVec.clear();
         }
     }
@@ -184,15 +193,30 @@ void DataPrepare::prepareAllData()
         
         for(const auto& prism : prismVector)
         {
-            selectObsCoords(selectedObsVec,circleCenter,prism,yaw,"H"); 
+            selectPointsByPrismAndAngle(selectedObsVec,circleCenter,prism,yaw,"H"); 
             selectedObsVec.clear();
         }
     }
 }
 
+vector<Point>& DataPrepare::getAllObsVector()
+{
+    return obsVector;
+}
+
 vector<tuple<vector<Point>,Point, double>>& DataPrepare::getHorienCircleDataVector()
 {
   return horienCircleDataVector;  
+}
+
+vector<tuple<vector<Point>,Point, double>>& DataPrepare::getVerticalCircleDataVector()
+{
+  return verticalCircleDataVector;  
+}
+
+vector< tuple<string,vector<Point>>>&  DataPrepare::getSphereDataByPrims()
+{
+    return this->spherePointsVector;
 }
 
 

@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 #include <cmath>
 #include <random>
@@ -13,6 +15,19 @@ using namespace std;
 // sphere funtion: (x - a)^2 + (y - b)^2 + (z - c)^2 = r^2
 
 // h = (x - a)^2 + (y - b)^2 + (z - c)^2 - r^2
+
+void SphereFit::getObsCoords(vector<tuple<string,vector<Point>>>& spherePointsVector,string prism)
+{
+    for(tuple<string,vector<Point>> prismData: spherePointsVector)
+    {
+        if(std::get<0>(prismData) == prism)
+        {
+            this->pointsVector = std::get<1>(prismData);
+        }
+    }
+    
+//     cout << endl << "prism: " << prism << " measured times: " << this->pointsVector.size() << endl; 
+}
 
 void SphereFit::getObsCoords(vector<double>& x_data, vector<double>& y_data, vector<double>& z_data)
 {
@@ -41,87 +56,152 @@ void SphereFit::getObsCoords(vector<double>& x_data, vector<double>& y_data, vec
     }
 }
 
-void SphereFit::setSphereParamInitail(const double x, const double y, const double z, const double r)
-{
-    this->sphereParam = {x,y,z,r};
-}
 
-vector<double>& SphereFit::getSpherePara()
+void SphereFit::setInitialParams()
 {
-    return this->sphereParam;
+    Point center;
+    double radius;
+    this->computeAverageCenterAndRadius(center,radius,this->pointsVector);
+
+    this->params.resize(4,1);
+
+    this->params = {center.x, center.y, center.z, radius};
+   
 }
 
 void SphereFit::fitCompute()
-{
-    ceres::Problem problem;
+{ 
+    ceres::Problem problem; 
     
-//     std::vector<double*>  parameterBlock= this->sphereParam; 
-//     int sizeOfParameterBlock = sizeof(parameterBlock) / sizeof(parameterBlock[0]);
-//     problem.AddParameterBlock(parameterBlock&,sizeOfParameterBlock,nullptr);
-    
-    vector<double> x_data, y_data,z_data;
-    this->getObsCoords(x_data, y_data,z_data);
-    
-    for ( int i = 0; i < x_data.size(); i++ )
+    for ( Point point : this->pointsVector )
     {
         ceres::CostFunction* costFunction = new ceres::AutoDiffCostFunction<SphereFittingCost,1,4> (
-            new SphereFittingCost ( x_data[i],y_data[i],z_data[i] ) );
+            new SphereFittingCost ( point ) );
         
         problem.AddResidualBlock (costFunction,new ceres::CauchyLoss ( 0.5 ),
-                                  this->sphereParam.data());
+                                  this->params.data());
 
     }
     
     ceres::Solver::Options solverOptions;
     solverOptions.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-    solverOptions.minimizer_progress_to_stdout = true;
+    solverOptions.minimizer_progress_to_stdout = false;
     
     ceres::Solver::Summary summary; 
     
     ceres::Solve(solverOptions,&problem,&summary);
     
 //     cout << summary.BriefReport() << endl;
-    cout << summary.FullReport() << endl;
+//     cout << summary.FullReport() << endl;
     
     //  covariance compute
     ceres::Covariance::Options covarianceOptions;
     ceres::Covariance covariance ( covarianceOptions );
 
     std::vector<std::pair<const double*, const double*> > covariance_blocks;
-    covariance_blocks.push_back ( make_pair (this->getSpherePara().data(), 
-                                             this->getSpherePara().data() ) );
+    covariance_blocks.push_back ( make_pair (this->getParams().data(), 
+                                             this->getParams().data() ) );
 
     CHECK ( covariance.Compute(covariance_blocks, &problem ) );
 
-    Eigen::Matrix<double,4,4,Eigen::RowMajor> covariance_abcr =
+    Eigen::Matrix<double,4,4,Eigen::RowMajor> covariance_params =
         Eigen::Matrix<double, 4,4,Eigen::RowMajor>::Zero();
 
-    covariance.GetCovarianceBlock(this->getSpherePara().data(), this->getSpherePara().data(),
-                                  covariance_abcr.data() );
+    covariance.GetCovarianceBlock(this->getParams().data(), this->getParams().data(),
+                                  covariance_params.data() );
 
-    std::cout << endl << "covariance of abcr: " << endl;
-    std::cout << covariance_abcr << endl;    
-    
-    std::vector<ceres::ResidualBlockId>* residual_blocks;
-    problem.GetResidualBlocks(residual_blocks);
+    std::cout << endl << "covariance of params: " << endl;
+    std::cout << covariance_params << endl;    
+//     
+//     std::vector<ceres::ResidualBlockId>* residual_blocks;
+//     problem.GetResidualBlocks(residual_blocks);
 //     const double* values;
 //     std::vector<ceres::ResidualBlockId>* residual_blocks;
 //     problem.GetResidualBlocksForParameterBlock(values,residual_blocks);
 //     cout << "test..." << endl;
 
+    this->resultString.clear();
+    if(summary.termination_type == ceres::CONVERGENCE)
+    {
+        stringstream ss;
+        ss << this->pointsVector[0].prismName << "," 
+           << this->pointsVector.size() << "," ;
+            
+        int countParmas = 4;
+        for(int i = 0; i < countParmas; i++)
+        {
+            ss << this->params.data()[i] << ",";
+        }
+        
+        for(int i = 0; i < countParmas; i++)
+        {
+            ss << covariance_params(i,i) << ",";
+        }
+        
+        ss << endl;
+        
+        this->resultString = ss.str();            
+    }
+
 }
 
-int main ( int argc,char** argv )
+void putOutResultFile(const string& outFileDir, const vector<string>& resultVector)
 {
-    SphereFit sphereFit;
+    int countFittedSucceed = 0;
+    for(string s : resultVector)
+    {
+        if(s.size() != 0)
+        {
+           countFittedSucceed++; 
+        }
+        cout << "test...";
+    }
     
-//     vector<double> x_data, y_data,z_data;
-//     sphereFit.getObsCoords(x_data, y_data,z_data);
+    ofstream outfile(outFileDir);
     
-    sphereFit.setSphereParamInitail(90,210,280,26);
-    
-    sphereFit.fitCompute();
-    
-    return 0;
+    if(!outfile)
+    {
+        cerr << "cant open file for writting: " << outFileDir << endl; 
+    }
 
+    outfile << "   count of succeed-fitted:  " << countFittedSucceed << endl;
+    outfile << "prism, countOfPoints, updated_x,updated_y,updated_z,updated_r, sigma,,,,,,," << endl;    
+    
+    for(auto& result : resultVector)
+    {
+        outfile << result;
+    }
+    
+    outfile.close();
 }
+
+// int main ( int argc,char** argv )
+// {
+//     DataPrepare dp;
+//     
+//     string fileDir = "/home/vboxuser/projects/shapeFit_v3/data/0515.csv"; 
+//     
+//     dp.readObsFile(fileDir);
+//     dp.selectPointsByPrims();
+//     vector<tuple<string,vector<Point>>> spherePointsVector = dp.getSphereDataByPrims();
+//     
+//     vector<string> resultVector;
+//     for(string prism : dp.prismVector)
+//     {
+//         SphereFit fitter;         
+//         fitter.getObsCoords(spherePointsVector,prism);
+//         fitter.setInitialParams();
+//         
+//         fitter.fitCompute();
+//         
+//         resultVector.push_back(fitter.getResultString());
+//         
+//         cout << fitter.getResultString() << endl;
+//     }
+//     
+//     string outFileDir = "../data/result_sphereFitted.txt";
+//     putOutResultFile(outFileDir,resultVector);
+//     
+//     return 0;
+//     
+// }

@@ -4,46 +4,53 @@
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
 
-class SphereFit
+#include "circleFit.h"
+
+class SphereFit : public CircleFit
 {
 public:
     
     SphereFit() {}
-     
+    
+    void getObsCoords(vector<tuple<string,vector<Point>>>& spherePointsVector,string prism);
+    
     void getObsCoords(vector<double>& x_data, vector<double>& y_data, vector<double>& z_data);
     
-    void setSphereParamInitail(const double x, const double y, const double z, const double r);  
+//     void setSphereParamInitail(const double x, const double y, const double z, const double r);  
     
-    void fitCompute();
+    void setInitialParams(); 
     
-    void report();
+    void fitCompute(); 
     
-    vector<double> & getSpherePara();
+    void fitAllShpere();
+    
+    void putOutResultFile(const string& outFileDir, const vector<string>& resultVector);
     
 private:
-    // 4 *1 vector: the coord of center of sphere, and radius
-    vector<double> sphereParam;  
+    
     
 };
 
 struct SphereFittingCost
 {
-    SphereFittingCost(const double x,const double y,const double z) : _x(x),_y(y),_z(z) {}
-
+public:
+    SphereFittingCost(const Point& point) : point(point) {}
+    
     template <typename T> 
-    bool operator()(const T* const abcr, T* residual) const
+    bool operator()(const T* const params, T* residual) const
     {
-        residual[0] = 
-            ceres::pow((T(_x) - abcr[0]),2) + 
-            ceres::pow((T(_y) - abcr[1]),2) + 
-            ceres::pow((T(_z) - abcr[2]),2) - 
-            abcr[3] * abcr[3] ;            
-            
-        return true;
+        residual[0] = pow( (T(point.x) - params[0]), 2) + 
+                      pow( (T(point.y) - params[1]), 2) +
+                      pow( (T(point.z) - params[2]), 2) -
+                      pow(  params[3], 2);
+                      
+       return true;
     }
-
-    private:
-        const double _x,_y,_z;
+    
+private:
+        Point point;        
+        
 };
+
 
 #endif

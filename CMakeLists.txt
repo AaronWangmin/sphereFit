@@ -49,11 +49,14 @@ find_package(Ceres REQUIRED)
 
 # install(TARGETS ceres_hello_202404 RUNTIME DESTINATION bin)
 
-add_executable(sphereFit sphereFit.cpp)
-target_link_libraries(sphereFit Ceres::ceres)
-
 add_executable(dataPrepare dataPrepare.cpp circleFit.cpp)
 target_link_libraries(dataPrepare Ceres::ceres)
 
 add_executable(circleFit circleFit.cpp dataPrepare.cpp)
 target_link_libraries(circleFit Ceres::ceres)
+
+add_executable(lineFit lineFit.cpp circleFit.cpp dataPrepare.cpp)
+target_link_libraries(lineFit Ceres::ceres)
+
+add_executable(sphereFit sphereFit.cpp dataPrepare.cpp circleFit.cpp )
+target_link_libraries(sphereFit Ceres::ceres)
