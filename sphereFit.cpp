@@ -145,35 +145,6 @@ void SphereFit::fitCompute()
 
 }
 
-void putOutResultFile(const string& outFileDir, const vector<string>& resultVector)
-{
-    int countFittedSucceed = 0;
-    for(string s : resultVector)
-    {
-        if(s.size() != 0)
-        {
-           countFittedSucceed++; 
-        }
-        cout << "test...";
-    }
-    
-    ofstream outfile(outFileDir);
-    
-    if(!outfile)
-    {
-        cerr << "cant open file for writting: " << outFileDir << endl; 
-    }
-
-    outfile << "   count of succeed-fitted:  " << countFittedSucceed << endl;
-    outfile << "prism, countOfPoints, updated_x,updated_y,updated_z,updated_r, sigma,,,,,,," << endl;    
-    
-    for(auto& result : resultVector)
-    {
-        outfile << result;
-    }
-    
-    outfile.close();
-}
 
 // int main ( int argc,char** argv )
 // {
@@ -186,7 +157,7 @@ void putOutResultFile(const string& outFileDir, const vector<string>& resultVect
 //     vector<tuple<string,vector<Point>>> spherePointsVector = dp.getSphereDataByPrims();
 //     
 //     vector<string> resultVector;
-//     for(string prism : dp.prismVector)
+//     for(string prism : prismVector)
 //     {
 //         SphereFit fitter;         
 //         fitter.getObsCoords(spherePointsVector,prism);

@@ -34,11 +34,11 @@ void CircleFit::setParamsInitail(Point& center, double& radius)
 void CircleFit::computeAverageCenterAndRadius(Point& center,double& radius,vector<Point>& pointsVector)
 {
 
-    int count = this->pointsVector.size();
+    int count = pointsVector.size();
     if(count > 0)
     {
         double sumN = 0, sumE = 0, sumH = 0;        
-        for(const auto& point : this->pointsVector)
+        for(const auto& point : pointsVector)
         {
             sumN += point.x;
             sumE += point.y;
@@ -50,7 +50,7 @@ void CircleFit::computeAverageCenterAndRadius(Point& center,double& radius,vecto
         center.z = sumH / count; 
         
         double sumRadius = 0;
-        for(const auto& point : this->pointsVector)
+        for(const auto& point : pointsVector)
         {
            double diff = std::sqrt(std::pow( (point.x - center.x),2) + 
                                         pow( (point.y - center.y),2) +
@@ -352,12 +352,12 @@ void CircleFit::putOutResultFile(const string& outFileDir, const vector<string>&
 
 
 
-int main ( int argc,char** argv )
-{
-    string dataFileDir = "/home/vboxuser/projects/shapeFit_v3/data/0515.csv";
-    CircleFit circleFit; 
-    circleFit.putOutAllCircleFitted(dataFileDir,"V"); 
-    
-    return 0;
-
-}
+// int main ( int argc,char** argv )
+// {
+//     string dataFileDir = "/home/vboxuser/projects/shapeFit_v3/data/0515.csv";
+//     CircleFit circleFit; 
+//     circleFit.putOutAllCircleFitted(dataFileDir,"V"); 
+//     
+//     return 0;
+// 
+// }

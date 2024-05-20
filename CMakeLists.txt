@@ -14,6 +14,8 @@ project(ceres_hello)
 
 # list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules )
 
+# add_definitions(-DEIGEN_STACK_ALLOCATION_LIMIT=0)
+
 include_directories(/usr/include/eigen3)
 
 # find_package(OpenCV REQUIRED)
@@ -49,14 +51,42 @@ find_package(Ceres REQUIRED)
 
 # install(TARGETS ceres_hello_202404 RUNTIME DESTINATION bin)
 
-add_executable(dataPrepare dataPrepare.cpp circleFit.cpp)
-target_link_libraries(dataPrepare Ceres::ceres)
+add_executable(configration configration.cpp)
+target_link_libraries(configration )
 
-add_executable(circleFit circleFit.cpp dataPrepare.cpp)
+add_executable(dataPrepare dataPrepare.cpp configration.cpp)
+target_link_libraries(dataPrepare )
+
+add_executable(shapeFit shapeFit.cpp dataPrepare.cpp)
+target_link_libraries(shapeFit )
+
+add_executable(sphereFit sphereFit.cpp configration.cpp dataPrepare.cpp shapeFit.cpp  )
+target_link_libraries(sphereFit Ceres::ceres)
+
+add_executable(allSphereFit allSphereFit.cpp configration.cpp dataPrepare.cpp shapeFit.cpp)
+target_link_libraries(allSphereFit Ceres::ceres)
+
+add_executable(oneTargetAllVerticalFit oneTargetAllVerticalFit.cpp configration.cpp dataPrepare.cpp shapeFit.cpp)
+target_link_libraries(oneTargetAllVerticalFit Ceres::ceres)
+
+add_executable(allTargetAllVerticalFit allTargetAllVerticalFit.cpp configration.cpp dataPrepare.cpp shapeFit.cpp oneTargetAllVerticalFit.cpp)
+target_link_libraries(allTargetAllVerticalFit Ceres::ceres)
+
+
+add_executable(circleFit circleFit.cpp dataPrepare.cpp configration.cpp)
 target_link_libraries(circleFit Ceres::ceres)
 
-add_executable(lineFit lineFit.cpp circleFit.cpp dataPrepare.cpp)
+add_executable(lineFit lineFit.cpp circleFit.cpp dataPrepare.cpp configration.cpp)
 target_link_libraries(lineFit Ceres::ceres)
 
-add_executable(sphereFit sphereFit.cpp dataPrepare.cpp circleFit.cpp )
-target_link_libraries(sphereFit Ceres::ceres)
+
+
+
+
+add_executable(allCircleFit allCircleFit.cpp dataPrepare.cpp circleFit.cpp sphereFit.cpp configration.cpp)
+target_link_libraries(allCircleFit Ceres::ceres)
+
+
+
+
+

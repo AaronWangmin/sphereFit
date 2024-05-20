@@ -55,7 +55,7 @@ void DataPrepare::readObsFile(const string dataFileDir)
     
     file.close();
     
-    cout << " count of obsPoints: " << obsVector.size() << endl; 
+    cout << dataFileDir << " has the avalable points: " << obsVector.size() << endl; 
     
 }
 
@@ -121,7 +121,7 @@ void DataPrepare::selectPointsByPrismAndAngle(vector<Point>& selectedObsVec ,Poi
 
 void DataPrepare::selectPointsByPrims()
 {
-    for(string prism : this->prismVector)
+    for(string prism : prismVector)
     {
         vector<Point> pointVector;
         for(Point p : this->obsVector)
@@ -170,7 +170,7 @@ void DataPrepare::calculateMeanCenterAndRadium(Point& circleCenterInitail,double
 void DataPrepare::prepareAllData()
 {
     //  circle on horizen 
-    cout << "************ horizen circle *************************" << endl;
+//     cout << "************ horizen circle *************************" << endl;
     for(const auto& prism : prismVector)
     {        
         
@@ -185,7 +185,7 @@ void DataPrepare::prepareAllData()
     }
     
      //  circle on horizen 
-    cout << "************ Vertical circle *************************" << endl;
+//     cout << "************ Vertical circle *************************" << endl;
     for(const auto& yaw : yawVector)
     {   
         vector<Point> selectedObsVec;        
@@ -224,19 +224,17 @@ vector< tuple<string,vector<Point>>>&  DataPrepare::getSphereDataByPrims()
 // {
 //     DataPrepare dp;
 //     
-//     string dataFileDir = "/home/vboxuser/projects/ceres_hello_202404/data/20240507-ZB60.csv";
+//     string dataFileDir = "/home/vboxuser/projects/shapeFit_v3/data/0515.csv";
 //     dp.readObsFile(dataFileDir);
 //     
 //     dp.prepareAllData();
-    
+//     
 //     vector<Point> selectedObsVec;
 //     Point circleCenter;
-//     dp.selectObsCoords(selectedObsVec, circleCenter,"C", 15,"H"); 
-
-//     dp.calculateCircleCenter(circleCenter,selectedObsVec);   
-    
-
-    
-//     return 0;
+//     double radumInitial;
+//     dp.selectPointsByPrismAndAngle(selectedObsVec, circleCenter,"C", 15,"H"); 
 // 
+//     dp.calculateMeanCenterAndRadium(circleCenter,radumInitial,selectedObsVec);  
+//     
+//     return 0;
 // }

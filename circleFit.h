@@ -76,7 +76,7 @@ protected:
 //     result
     Result result;
     string resultString;
-    
+//      string resultString;
 //     ceres params
 //     ceres::Problem problem;
 //     ceres::Solver::Summary summary;

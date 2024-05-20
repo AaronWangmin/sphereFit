@@ -4,9 +4,13 @@
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
 
-#include "circleFit.h"
+// #include "circleFit.h"
+#include "shapeFit.h"
 
-class SphereFit : public CircleFit
+// void putOutResultFile(const string& outFileDir, const vector<string>& resultVector);
+
+// class SphereFit : public CircleFit
+class SphereFit : public ShapeFit
 {
 public:
     
