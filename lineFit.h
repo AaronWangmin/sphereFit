@@ -4,25 +4,28 @@
 #include <Eigen/Dense>
 #include <ceres/jet.h>
 
-#include "circleFit.h"
+// #include "circleFit.h"
+#include "shapeFit.h"
 
-class LineFit : public CircleFit
+class LineFit : public ShapeFit
 {
 public:
-    void getObscoords(vector<Result>& circleCenterVector);
+    static const int dimensionParams = 3;
     
-    void getObscoords(const string dataFileDir);
+    void getObs();
     
-    void computeInitialParams(); 
+    void getObs(const string dataFileDir);
+    
+    void setInitialParams();
+
+    void fitCompute(); 
     
     double computeVertical(double x, double y, double z );
-    
-    void fitCompute();
         
 };
 
 //*** line function: p = p0 + t * d
-//    params:   6 + n dimensions(p0: 3*1, d: 3*1 ,t: n)
+//    params:   3  dimensions( d: 3*1)
 //    residual: 3 dimensions
 //*** 
 
@@ -30,77 +33,48 @@ public:
 struct LineFittingCost
 {
 public:
-    LineFittingCost(const Point& point, const int indexPoint) : point(point),indexPoint(indexPoint) {}
+    LineFittingCost(const Point& point) : point(point) {}
     
     template <typename T> 
     bool operator()(const T* const params, T* residual) const
     {
-       int indexParam = 6 + indexPoint;
+        T p0[3] = { T(953.672), T(1008.62), T(23.3908)};
        
-//        ceres::Jet<double,2> t;
-       
-//        auto t = ( (T(point.x) - params[0]) / params[3] +
-//                (T(point.y) - params[1]) / params[4] +
-//                (T(point.z) - params[2]) / params[4] ) / 3.0; 
-//                
-//        residual[0] = T(point.x) - params[0] - params[3] * t;
-//        residual[1] = T(point.y) - params[1] - params[4] * t; 
-//        residual[2] = T(point.z) - params[2] - params[5] * t;
-
-       residual[0] = T(point.x) - params[0] - params[4] * params[indexParam];
-       residual[1] = T(point.y) - params[1] - params[5] * params[indexParam]; 
-       residual[2] = T(point.z) - params[2] - params[6] * params[indexParam];
+        T t;
+        t = ( (T(point.x) - p0[0]) / params[0] +
+              (T(point.y) - p0[1]) / params[1] +
+              (T(point.z) - p0[2]) / params[2] ) / T(3.0); 
+               
+       residual[0] = T(point.x) - p0[0] - params[0] * t;
+       residual[1] = T(point.y) - p0[1] - params[1] * t; 
+       residual[2] = T(point.z) - p0[2] - params[2] * t;
        
        return true;
     }
     
 private:
         const Point& point;
-        const int indexPoint;        
+//         const int indexPoint;        
 };
 
-
-struct PlantFittingCost
+//  | a b c| = 1
+struct CircleFittingCost_2
 {
 public:
-    PlantFittingCost(const Point& point) : point(point) {}
+    CircleFittingCost_2() {}
     
     template <typename T> 
     bool operator()(const T* const params, T* residual) const
     {
-//        plant function: a(x-x0) + b(y-y0) + c(z-z0) = 0
-        residual[0] = params[3] * (T(point.x) - params[0]) +
-                      params[4] * (T(point.y) - params[1]) +
-                      params[5] * (T(point.z) - params[2]);
-                      
-        residual[1] = ceres::sqrt(params[3] * params[3] + 
-                                  params[4] * params[4] +
-                                  params[5] * params[5]) -T(1.0);
-                      
-       return true;
+        residual[0] = 
+            params[0] * params[0] +
+            params[1] * params[1] +
+            params[2] * params[2] - T(1.0);
+            
+        return true;
     }
     
-private:
-        const Point& point;
-        
 };
-
-// struct PlantFittingConstantCost
-// {
-// public:
-//     PlantFittingConstantCost() {}
-//     
-//     template <typename T> 
-//     bool operator()(const T* const params, T* residual) const
-//     {
-//        params constant function: ||a b c|| = 1
-//         residual[0] = ceres::sqrt(params[3] * params[3] + 
-//                                   params[4] * params[4] +
-//                                   params[5] * params[5]) -T(1.0) ;
-//        return true;
-//     }
-//       
-// };
 
 
 

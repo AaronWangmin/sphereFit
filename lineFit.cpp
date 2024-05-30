@@ -6,21 +6,21 @@
 #include "lineFit.h"
 #include "dataPrepare.h"
 
-void LineFit::getObscoords(vector<Result>& fitedCircleResultVector)
-{    
-    for(auto& result : fitedCircleResultVector)
-    {
-        this->pointsVector.push_back(Point(result.updatedParams[0],
-                                           result.updatedParams[1],
-                                           result.updatedParams[2],
-                                           result.yaw,
-                                           result.pitch,
-                                           result.fixTag,
-                                           result.primsName));
-    }
-}
+// void LineFit::getObscoords(vector<Result>& fitedCircleResultVector)
+// {    
+//     for(auto& result : fitedCircleResultVector)
+//     {
+//         this->pointsVector.push_back(Point(result.updatedParams[0],
+//                                            result.updatedParams[1],
+//                                            result.updatedParams[2],
+//                                            result.yaw,
+//                                            result.pitch,
+//                                            result.fixTag,
+//                                            result.primsName));
+//     }
+// }
 
-void LineFit::getObscoords(const string dataFileDir)
+void LineFit::getObs(const string dataFileDir)
 {
     ifstream file(dataFileDir);
     if(!file.is_open())
@@ -29,10 +29,10 @@ void LineFit::getObscoords(const string dataFileDir)
     }
     
     string lineStr;
-//     for(int i = 0; i <5; i++)
-//     {
-//         getline(file,lineStr);
-//     }
+    for(int i = 0; i <3; i++)
+    {
+        getline(file,lineStr);
+    }
     
     int indexPoint = 5;
     while(getline(file,lineStr))
@@ -62,30 +62,17 @@ void LineFit::getObscoords(const string dataFileDir)
     cout << " count of circle-fitted: " << pointsVector.size() << endl; 
 }
 
-void LineFit::computeInitialParams()
+void LineFit::setInitialParams()
 {
-    this->params.resize(6,1);
+    this->params.resize(dimensionParams,1);
     
-    int count = this->pointsVector.size();
-    if(count > 0)
-    {
-        double sumN = 0, sumE = 0, sumH = 0;        
-        for(const auto& point : this->pointsVector)
-        {
-            sumN += point.x;
-            sumE += point.y;
-            sumH += point.z; 
-        }
-        
-//         Point circleCenterInitail(sumN / count, sumE / count, 22);
-        double c_x = sumN / count;
-        double c_y = sumE / count;
-        double c_z = sumH / count;
-        
-        this->params[0] = c_x;
-        this->params[1] = c_y;
-        this->params[2] = c_z;
-    }
+//     this->params[0] = 953.672;
+//     this->params[1] = 1008.62;  
+//     this->params[2] = 23.3908; 
+    
+    this->params[0] = 1;
+    this->params[1] = 2;  
+    this->params[2] = 3; 
 }
 
 // 
@@ -109,43 +96,29 @@ void LineFit::fitCompute()
     {
 //*** param: cost funtion, dimensions of residual, dimensions of unknown params 
         
-        ceres::CostFunction* costFunction = new ceres::AutoDiffCostFunction<PlantFittingCost,2,6> 
-            (new PlantFittingCost ( point) );
+        ceres::CostFunction* costFunction = new ceres::AutoDiffCostFunction<LineFittingCost,3,3> 
+            (new LineFittingCost ( point) );
         
         problem.AddResidualBlock (costFunction,new ceres::CauchyLoss ( 0.5 ),
                                   this->params.data());
     }
+        
+    ceres::CostFunction* costFunction_2 = new ceres::AutoDiffCostFunction<CircleFittingCost_2,1,3> 
+        (new CircleFittingCost_2 () );
     
-//     plant constant cost function
-//     ceres::CostFunction* constantCostFunction = new ceres::AutoDiffCostFunction<PlantFittingConstantCost,1,6> 
-//         (new PlantFittingConstantCost () );
-// 
-//     problem.AddResidualBlock (constantCostFunction,new ceres::CauchyLoss ( 0.5 ),
-//                                   this->params.data());
+    problem.AddResidualBlock (costFunction_2,new ceres::CauchyLoss ( 0.5 ),
+                                this->params.data());
     
     ceres::Solver::Options solverOptions;
     solverOptions.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-    solverOptions.minimizer_progress_to_stdout = true;
+    solverOptions.minimizer_progress_to_stdout = false;
     
-//     ceres::Solver::Summary summary;     
-    ceres::Solve(solverOptions,&problem,&summary);    
+    ceres::Solver::Summary summary; 
+    
+    ceres::Solve(solverOptions,&problem,&summary);
+    
+//     cout << summary.BriefReport() << endl;
     cout << summary.FullReport() << endl;
-    
-    cout << "updatedParams: " << endl;
-    cout << params.data()[0] << endl;
-    cout << params.data()[1] << endl;
-    cout << params.data()[2] << endl;
-    cout << params.data()[3] << endl;
-    cout << params.data()[4] << endl;
-    cout << params.data()[5] << endl;
-
-    
-//     for(auto& param : params.data)
-//     {
-//        cout << param << endl; 
-//     }
-     
-    cout << "vertical: " << this->computeVertical(params[3],params[4],params[5]) << endl;
     
     //  covariance compute
     ceres::Covariance::Options covarianceOptions;
@@ -157,59 +130,55 @@ void LineFit::fitCompute()
 
     CHECK ( covariance.Compute(covariance_blocks, &problem ) );
 
-    Eigen::Matrix<double,6,6,Eigen::RowMajor> covariance_abcr =
-        Eigen::Matrix<double, 6,6,Eigen::RowMajor>::Zero();
+    Eigen::Matrix<double,dimensionParams,dimensionParams,Eigen::RowMajor> covariance_params =
+        Eigen::Matrix<double, dimensionParams,dimensionParams,Eigen::RowMajor>::Zero();
 
     covariance.GetCovarianceBlock(this->getParams().data(), this->getParams().data(),
-                                  covariance_abcr.data() );
+                                  covariance_params.data() );
 
-//***     std::cout << endl << "covariance of abcr: " << endl;
-//***     std::cout << covariance_abcr << endl; 
+    std::cout << endl << "covariance of params: " << endl;
+    std::cout << covariance_params << endl; 
     
-//     this->result.primsName = get<0>(circleDatas)[0].prismName;
-//     this->result.angle = get<0>(circleDatas)[0].pitch;
-    this->result.fixTag = "pitch";
-    this->result.countPoints = pointsVector.size();
-    
-//     this->result.initalParams = {get<1>(circleDatas).x,
-//         get<1>(circleDatas).y,
-//         get<1>(circleDatas).z,
-//         get<2>(circleDatas) };
-    
-    this->result.updatedParams = {params.data()[0],
-        params.data()[1],
-        params.data()[2],
-        params.data()[3],
-        params.data()[4],
-        params.data()[5] };
+    this->resultString.clear();
+    stringstream ss;
+//     ss << get<0>(circleDatas)[0].prismName << "," 
+//         << get<0>(circleDatas)[0].yaw << "_"
+//         << get<0>(circleDatas)[0].pitch << ","                 
+//         << get<0>(circleDatas).size() << "," ;
         
-    this->result.sigamas = {covariance_abcr(0,0),
-        covariance_abcr(1,1),
-        covariance_abcr(2,2),
-        covariance_abcr(3,3), 
-        covariance_abcr(4,5),
-        covariance_abcr(4,5) };
+
+    for(int i = 0; i < dimensionParams; i++)
+    {
+        ss << this->params.data()[i] << ",";
+    }
+    
+    for(int i = 0; i < dimensionParams; i++)
+    {
+        ss << covariance_params(i,i) << ",";
+    }
+    
+    ss << endl;
+    
+    this->resultString = ss.str(); 
+    
+    cout << endl << this->resultString;
+    
+    vector<double> rotation = {params.data()[0], params.data()[1], params.data()[2]};
+    angleAxisToEuro(rotation);
         
 }
 
-
-// *** test ***
-// int main ( int argc,char** argv )
-// {    
-//     string fileDir = "/home/vboxuser/projects/shapeFit_v3/data/20240507-ZB07.csv";
-//     string fileDir = "/home/vboxuser/projects/shapeFit_v3/data/20240507-ZB60_ave.csv";    
-//     
-//     CircleFit circleFit; 
-//     circleFit.putOutAllCircleFitted(fileDir,"H");
-//     
-//  
-//     LineFit linefit;    
-//     linefit.getObscoords("../data/result_circleFitted.txt");
-//     linefit.computeInitialParams();    
-//     linefit.fitCompute();
-//     
-//     linefit.report();
-//     
-//     return 0;
-//     
-// }
+int main ( int argc,char** argv )
+{ 
+    LineFit fit;    
+    fit.getObs("../data/result_circleFitted.txt");
+    fit.setInitialParams();    
+    fit.fitCompute();
+    
+    
+    
+//     fit.report();
+    
+    return 0;
+    
+}

@@ -66,18 +66,20 @@ target_link_libraries(sphereFit Ceres::ceres)
 add_executable(allSphereFit allSphereFit.cpp configration.cpp dataPrepare.cpp shapeFit.cpp)
 target_link_libraries(allSphereFit Ceres::ceres)
 
+add_executable(lineFit lineFit.cpp configration.cpp dataPrepare.cpp shapeFit.cpp)
+target_link_libraries(lineFit Ceres::ceres)
+
 add_executable(oneTargetAllVerticalFit oneTargetAllVerticalFit.cpp configration.cpp dataPrepare.cpp shapeFit.cpp)
 target_link_libraries(oneTargetAllVerticalFit Ceres::ceres)
 
-add_executable(allTargetAllVerticalFit allTargetAllVerticalFit.cpp configration.cpp dataPrepare.cpp shapeFit.cpp oneTargetAllVerticalFit.cpp)
+add_executable(allTargetAllVerticalFit allTargetAllVerticalFit.cpp configration.cpp dataPrepare.cpp shapeFit.cpp shapeFit.cpp)
 target_link_libraries(allTargetAllVerticalFit Ceres::ceres)
 
 
 add_executable(circleFit circleFit.cpp dataPrepare.cpp configration.cpp)
 target_link_libraries(circleFit Ceres::ceres)
 
-add_executable(lineFit lineFit.cpp circleFit.cpp dataPrepare.cpp configration.cpp)
-target_link_libraries(lineFit Ceres::ceres)
+
 
 
 

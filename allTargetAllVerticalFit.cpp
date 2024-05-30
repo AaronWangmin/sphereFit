@@ -8,61 +8,83 @@ void AllTargetAllVerticalFit::getObs(const vector<Point>& obsVector)
     this->pointsVector = obsVector;
 }
 
-void AllTargetAllVerticalFit::setInitialParams(vector<tuple<vector<Point>,Point, double>> horizenCircleVector)
+void AllTargetAllVerticalFit::setInitialParams(vector<tuple<vector<Point>,Point, double>>& horizenCircleVector)
 {
     this->params.resize(dimensionParams,1);
     
-    this->params[0] = -953.672;
-    this->params[1] = -1008.62;  
-    this->params[2] = -23.3908; 
+//     this->params[0] = -953.672;
+//     this->params[1] = -1008.62;  
+//     this->params[2] = -23.3908; 
     
-    this->params[2] = 0.0;
-    this->params[3] = 0.0; 
-    this->params[4] = 0.0; 
+    this->params[0] = 0.0;
+    this->params[1] = EIGEN_PI / (180 *3600.0); 
+    this->params[2] = EIGEN_PI / (180 *3600.0); 
     
     Point center;
     double radius;
     this->computeAverageCenterAndRadius(center,radius,this->pointsVector);
     
-    int zCoordParamIndex = 6;
-    int radiusParamIndex = 71;    
+    int zCoordParamIndex = 3;
+    int radiusParamIndex = zCoordParamIndex + 55;    
     for(auto& horizenCircle : horizenCircleVector)
     {
-        this->params[zCoordParamIndex] = std::get<1>(horizenCircle).z;
+        this->params[zCoordParamIndex] = std::get<1>(horizenCircle).z + this->params[2];
+        
         this->params[radiusParamIndex] = std::get<2>(horizenCircle);
       
         zCoordParamIndex += 1;
         radiusParamIndex += 1;
     }
+    
+//     cout << "test:  setInitialParams()...." << endl;
 }
 
-void AllTargetAllVerticalFit::fitCompute(vector<tuple<vector<Point>,Point, double>> horizenCircleVector)
+void AllTargetAllVerticalFit::fitCompute(vector<tuple<vector<Point>,Point, double>>& horizenCircleVector)
 {
+//     cout << "test:  fitCompute()...." << endl;
+    
     ceres::Problem problem; 
     
-    int zCoordParamIndex = 6;
-    int radiusParamIndex = 71; 
+    int zCoordParamIndex = 3;
+    int radiusParamIndex = zCoordParamIndex + 55; 
  
     for(auto& horizenCircle : horizenCircleVector)
     {
-        for ( Point point : std::get<0>(horizenCircle) )
+        for ( Point& point : std::get<0>(horizenCircle) )
         {
+//              cout << "test:  fitCompute()... for ." << endl;
+             
             ceres::CostFunction* costFunction = new ceres::AutoDiffCostFunction<AllTargetAllVerticalFittingCost,2,dimensionParams> (
             new AllTargetAllVerticalFittingCost ( point, zCoordParamIndex, radiusParamIndex ) );
         
+//             cout << "test:  fitCompute()... costFunction() ." << endl;
             problem.AddResidualBlock (costFunction,new ceres::CauchyLoss ( 0.5 ),
                                 this->params.data());
         }
         
         zCoordParamIndex += 1;
         radiusParamIndex += 1;
-        
-//         ceres::CostFunction* costFunction_2 = new ceres::AutoDiffCostFunction<OneTargetAllVerticalFittingCost_2,1,dimensionParams> (
-// new OneTargetAllVerticalFittingCost_2 () );
-// 
-// problem.AddResidualBlock (costFunction_2,new ceres::CauchyLoss ( 0.5 ),
-//                     this->params.data());
     }
+    
+    for(auto& horizenCircle : horizenCircleVector)
+    {
+        for ( Point& point : std::get<0>(horizenCircle) )
+        {
+//              cout << "test:  fitCompute()... for ." << endl;
+             
+            ceres::CostFunction* costFunction_2 = new ceres::AutoDiffCostFunction<AllTargetAllVerticalFittingCost_2,3,dimensionParams> (
+            new AllTargetAllVerticalFittingCost_2 ( point, zCoordParamIndex, radiusParamIndex ) );
+        
+//             cout << "test:  fitCompute()... costFunction() ." << endl;
+            problem.AddResidualBlock (costFunction_2,new ceres::CauchyLoss ( 0.5 ),
+                                this->params.data());
+        }
+        
+        zCoordParamIndex += 1;
+        radiusParamIndex += 1;
+    }
+    
+    
         
     ceres::Solver::Options solverOptions;
     solverOptions.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
@@ -121,42 +143,28 @@ void AllTargetAllVerticalFit::fitCompute(vector<tuple<vector<Point>,Point, doubl
     cout << endl << this->resultString;
 }
 
-// int AllTargetAllVerticalFit::getZCoordAndRadiusIndex(const Point& point, 
-//                                                      int& zCoordParamIndex,
-//                                                      int& radiusParamIndex 
-//                                                     ) const
-// {
-//     
-//     auto prismIt = std::find(prismVector.begin(),prismVector.end(),point.prismName);
-//     int prismIndex = std::distance(prismVector.begin(), prismIt);
-//     
-//     auto pitchIt = std::find(pitchVector.begin(),pitchVector.end(),point.pitch);     
-//     int pitchIndex = std::distance(pitchVector.begin(), pitchIt);
-//     
-//     
-//     int beginIndex = 6;
-//     zCoordParamIndex = beginIndex + prismIndex * pitchVector.size() + pitchIndex;    
-//     
-//     beginIndex += (prismVector.size() * pitchVector.size());
-//     radiusParamIndex = beginIndex + prismIndex * pitchVector.size() + pitchIndex;
-//     
-//     return 0;    
-// }
 
-int main ( int argc,char** argv )
-{    
-    DataPrepare dp;
+
+
+
+/*int main ( int argc,char** argv )
+{  */  
+//     DataPrepare dp;
+//     
+//     string fileDir = "/home/vboxuser/projects/shapeFit_v3/data/0515.csv"; 
+//     
+//     dp.readObsFile(fileDir);
+//     
+//     dp.prepareAllData();
+//     
+//     vector<tuple<vector<Point>,Point, double>> horizenCircleVector = dp.getHorienCircleDataVector();
+//     horizenCircleVector.erase(horizenCircleVector.begin());     
+//    
+//     AllTargetAllVerticalFit fit;
+//     fit.setInitialParams(horizenCircleVector);
+//     
+//     fit.fitCompute(horizenCircleVector);
     
-    string fileDir = "/home/vboxuser/projects/shapeFit_v3/data/0515.csv"; 
-    
-    dp.readObsFile(fileDir);
-    
-    dp.prepareAllData();
-    
-    vector<tuple<vector<Point>,Point, double>> horizenCircleVector = dp.getHorienCircleDataVector();
-    horizenCircleVector.erase(horizenCircleVector.begin());     
-   
-    AllTargetAllVerticalFit fit;
-    fit.setInitialParams(horizenCircleVector);
-    fit.fitCompute(horizenCircleVector);
-}
+//     vector<double> angleAxis = {2.24744, -2.11176, -0.591471};
+//     angleAxisToEuro(angleAxis);
+// }

@@ -21,6 +21,8 @@ using namespace std;
 
 void putOutResultFile(const string& outFileDir, const vector<string>& resultVector);
 
+void angleAxisToEuro(vector<double>&);
+
 class ShapeFit
 {
 public:

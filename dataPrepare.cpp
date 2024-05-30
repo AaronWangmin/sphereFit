@@ -186,17 +186,17 @@ void DataPrepare::prepareAllData()
     
      //  circle on horizen 
 //     cout << "************ Vertical circle *************************" << endl;
-    for(const auto& yaw : yawVector)
-    {   
-        vector<Point> selectedObsVec;        
-        Point circleCenter;
-        
-        for(const auto& prism : prismVector)
-        {
-            selectPointsByPrismAndAngle(selectedObsVec,circleCenter,prism,yaw,"H"); 
-            selectedObsVec.clear();
-        }
-    }
+//     for(const auto& yaw : yawVector)
+//     {   
+//         vector<Point> selectedObsVec;        
+//         Point circleCenter;
+//         
+//         for(const auto& prism : prismVector)
+//         {
+//             selectPointsByPrismAndAngle(selectedObsVec,circleCenter,prism,yaw,"H"); 
+//             selectedObsVec.clear();
+//         }
+//     }
 }
 
 vector<Point>& DataPrepare::getAllObsVector()

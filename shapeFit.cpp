@@ -61,3 +61,36 @@ void putOutResultFile(const string& outFileDir, const vector<string>& resultVect
     
     outfile.close();
 }
+
+void angleAxisToEuro(vector<double>& rotation)
+{
+    Eigen::Vector3d r(rotation[0], rotation[1], rotation[2]);
+    
+    double angle = r.norm();
+    
+    r.normalize();
+    
+    Eigen::AngleAxisd angleAxis(angle, r);
+    
+    Eigen::Matrix3d rotationMatrix = angleAxis.toRotationMatrix();
+    
+    Eigen::Vector3d eulerAngle = rotationMatrix.eulerAngles(2,1,0);
+    
+    
+    cout << "angleAxis: " << endl;
+    for(int i= 0; i < r.size(); i++)
+    {
+        cout << r(i) << "," ;
+    }
+    
+    cout << endl <<  "angle: " << angle * 180.0 / EIGEN_PI << endl;
+    
+    cout << endl << "euler angle(z-y-x):" << endl <<
+                    "yaw: "   << eulerAngle(0) * 180.0 / EIGEN_PI << " , "
+                    "pitch: " << eulerAngle(1) * 180.0 / EIGEN_PI << " , "
+                    "roll: "  << eulerAngle(2) * 180.0 / EIGEN_PI << " , " << endl;
+    
+    
+    
+    
+}
