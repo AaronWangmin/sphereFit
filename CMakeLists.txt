@@ -4,6 +4,8 @@ set( CMAKE_CXX_FLAGS "-std=c++17 " )
 
 set( CMAKE_BUILD_TYPE "Debug")
 
+# set( CMAKE_CXX_FLAGS "-ftemplate-depth=15000")
+
 # cmake_minimum_required(VERSION 2.8)
 
 # project(gaussNewton)
@@ -68,6 +70,9 @@ target_link_libraries(allSphereFit Ceres::ceres)
 
 add_executable(lineFit lineFit.cpp configration.cpp dataPrepare.cpp shapeFit.cpp)
 target_link_libraries(lineFit Ceres::ceres)
+
+add_executable(eccentricityAndInclination eccentricityAndInclination.cpp configration.cpp dataPrepare.cpp shapeFit.cpp)
+target_link_libraries(eccentricityAndInclination Ceres::ceres)
 
 add_executable(oneTargetAllVerticalFit oneTargetAllVerticalFit.cpp configration.cpp dataPrepare.cpp shapeFit.cpp)
 target_link_libraries(oneTargetAllVerticalFit Ceres::ceres)

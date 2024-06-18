@@ -137,16 +137,16 @@ int AllCircleFit::getParamIndex(const Point& point,int startIndex) const
       
 }
 
-int main ( int argc,char** argv )
-{
-    DataPrepare dp;
-    
-    string fileDir = "/home/vboxuser/projects/shapeFit_v3/data/0515.csv"; 
-    
-    dp.readObsFile(fileDir);
-    
-    AllCircleFit acf;
-    acf.getObs(dp.getAllObsVector());
-    acf.setInitialParams();
-    acf.fitCompute();
-}
+// int main ( int argc,char** argv )
+// {
+//     DataPrepare dp;
+//     
+//     string fileDir = "/home/vboxuser/projects/shapeFit_v3/data/0515.csv"; 
+//     
+//     dp.readObsFile(fileDir);
+//     
+//     AllCircleFit acf;
+//     acf.getObs(dp.getAllObsVector());
+//     acf.setInitialParams();
+//     acf.fitCompute();
+// }
